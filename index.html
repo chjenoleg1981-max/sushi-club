@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СУШИ КЛУБ</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f0e0d;
+            color: #ffffff;
+        }
+        /* Вертикальная рамка под постер/фото, чтобы весь кадр помещался целиком */
+        .product-image-box {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            background-color: #11100f;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .product-image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center center;
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover .product-image-box img {
+            transform: scale(1.03);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-amber-500 selection:text-black">
+
+    <!-- Шапка сайта -->
+    <header class="sticky top-0 z-40 bg-[#141210]/95 backdrop-blur-md border-b border-stone-800/80">
+        <div class="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between gap-2">
+            <!-- Логотип с драконом -->
+            <div class="flex items-center gap-2.5 cursor-pointer" onclick="scrollToTop()">
+                <img src="dragon.png" alt="Дракон" class="w-9 h-9 object-contain rounded-lg" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                <span class="text-2xl hidden">🐉</span>
+                <div class="leading-tight font-extrabold tracking-wide text-amber-400 text-sm sm:text-base uppercase">
+                    СУШИ<br>КЛУБ
+                </div>
+            </div>
+
+            <!-- Кнопки справа -->
+            <div class="flex items-center gap-2">
+                <button onclick="toggleAdminMode()" id="btn-admin-toggle" class="bg-[#1c1917] hover:bg-stone-800 border border-stone-700/80 text-stone-200 px-3.5 py-2 rounded-xl text-xs font-semibold flex flex-col items-center justify-center min-w-[82px] transition-colors">
+                    <i class="fa-solid fa-lock text-amber-400 text-xs mb-0.5" id="admin-lock-icon"></i>
+                    <span>Админка</span>
+                </button>
+
+                <button onclick="openCart()" class="relative bg-[#f59e0b] hover:bg-amber-400 text-black px-4 py-2 rounded-xl text-xs font-bold flex flex-col items-center justify-center min-w-[86px] shadow-lg shadow-amber-500/20 transition-all">
+                    <i class="fa-solid fa-cart-shopping text-xs mb-0.5"></i>
+                    <span>Корзина</span>
+                    <span id="cart-badge" class="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-extrabold w-5 h-5 rounded-full flex items-center justify-center shadow hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Панель добавления нового товара (появляется после ввода кода 7777) -->
+    <div id="admin-bar" class="hidden max-w-3xl mx-auto w-full px-4 pt-4">
+        <div class="bg-[#181512] border border-amber-500/40 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+            <div class="text-xs text-amber-300 font-medium">
+                <i class="fa-solid fa-shield-halved mr-1"></i> Режим редактирования включён
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="openProductModal()" class="bg-[#f59e0b] hover:bg-amber-400 text-black font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors">
+                    <i class="fa-solid fa-plus"></i> Добавить ролл
+                </button>
+                <button onclick="resetMenu()" class="bg-stone-800 hover:bg-stone-700 text-amber-300 font-semibold px-3 py-2 rounded-xl text-xs transition-colors">
+                    Сбросить меню
+                </button>
+                <button onclick="toggleAdminMode()" class="bg-stone-800 hover:bg-stone-700 text-stone-200 font-semibold px-3 py-2 rounded-xl text-xs transition-colors">
+                    Выйти
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Основной список карточек -->
+    <main class="flex-grow max-w-3xl mx-auto w-full px-4 py-4">
+        <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Карточки рендерятся через JS -->
+        </div>
+    </main>
+
+    <!-- Модальное окно Корзины -->
+    <div id="cart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-[#181512] border border-stone-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-stone-800 flex items-center justify-between">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-cart-shopping text-amber-400"></i> Корзина
+                </h3>
+                <button onclick="closeCart()" class="w-8 h-8 rounded-xl bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div id="cart-items" class="p-4 overflow-y-auto flex-grow space-y-3 divide-y divide-stone-800/60">
+                <!-- Товары в корзине -->
+            </div>
+
+            <div class="p-4 border-t border-stone-800 bg-[#141210] space-y-3 rounded-b-3xl">
+                <div class="flex justify-between items-center text-sm font-bold">
+                    <span class="text-stone-400">Итого:</span>
+                    <span id="cart-total" class="text-lg text-amber-400 font-extrabold">0 ₽</span>
+                </div>
+
+                <div id="checkout-fields" class="space-y-2.5 hidden">
+                    <input type="text" id="cust-name" placeholder="Ваше имя" class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    <input type="tel" id="cust-phone" placeholder="Ваш телефон или @username (отправка в @olegchjen)" class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                    <input type="text" id="cust-address" placeholder="Адрес доставки" class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500">
+                </div>
+
+                <button id="btn-checkout-step" onclick="handleCheckout()" class="w-full bg-[#f59e0b] hover:bg-amber-400 text-black font-bold py-3 rounded-xl text-sm transition-colors">
+                    Оформить заказ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно Редактирования / Добавления товара -->
+    <div id="product-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-[#181512] border border-stone-800 rounded-3xl w-full max-w-md p-5 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 id="modal-title" class="text-base font-bold text-white">Редактировать ролл</h3>
+                <button onclick="closeProductModal()" class="w-8 h-8 rounded-xl bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="product-form" onsubmit="saveProduct(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label class="block text-stone-400 mb-1">Название</label>
+                    <input type="text" id="p-name" required class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-stone-400 mb-1">Состав / Описание</label>
+                    <textarea id="p-desc" rows="2" required class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-stone-400 mb-1">Цена (₽)</label>
+                    <input type="number" id="p-price" required class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500">
+                </div>
+                <div>
+                    <label class="block text-stone-400 mb-1">Фото (ссылка URL или загрузка файла)</label>
+                    <input type="text" id="p-image" placeholder="IMG_8710.png или https://..." class="w-full bg-[#0f0e0d] border border-stone-800 rounded-xl px-3.5 py-2.5 text-white focus:outline-none focus:border-amber-500 mb-2">
+                    <input type="file" id="p-file" accept="image/*" onchange="handleImageUpload(event)" class="w-full text-stone-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-stone-800 file:text-amber-400 hover:file:bg-stone-700">
+                </div>
+
+                <button type="submit" class="w-full bg-[#f59e0b] hover:bg-amber-400 text-black font-bold py-3 rounded-xl text-sm transition-colors mt-2">
+                    Сохранить
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const defaultProducts = [
+            {
+                id: 1,
+                name: "Филадельфия",
+                desc: "Нежный лосось, сливочный сыр, филадельфия, огурец, рис, нори.",
+                price: 12000,
+                image: "IMG_8710.png"
+            },
+            {
+                id: 2,
+                name: "Калифорния с крабом",
+                desc: "Снежный краб, авокадо, огурец, икра тобико, японский майонез, рис, нори.",
+                price: 11000,
+                image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=85"
+            },
+            {
+                id: 3,
+                name: "Канадский ролл",
+                desc: "Копченый угорь, лосось, сливочный сыр, авокадо, соус унаги, кунжут.",
+                price: 13500,
+                image: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=85"
+            },
+            {
+                id: 4,
+                name: "Ролл с лососем и авокадо",
+                desc: "Свежий лосось, спелый авокадо, творожный сыр, рис, нори.",
+                price: 11500,
+                image: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=85"
+            }
+        ];
+
+        let parsedProducts = null;
+        try { parsedProducts = JSON.parse(localStorage.getItem('sushi_club_products_v5')); } catch (e) {}
+        let products = (Array.isArray(parsedProducts) && parsedProducts.length > 0) ? parsedProducts : defaultProducts;
+        let cart = JSON.parse(localStorage.getItem('sushi_club_cart_v5')) || [];
+        let isAdmin = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderProducts();
+            updateCartBadge();
+            updateAdminUI();
+        });
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleAdminMode() {
+            if (!isAdmin) {
+                const pin = prompt("Введите PIN-код администратора:");
+                if (pin !== "7777") {
+                    if (pin !== null) alert("Неверный код доступа");
+                    return;
+                }
+                isAdmin = true;
+            } else {
+                isAdmin = false;
+            }
+            updateAdminUI();
+            renderProducts();
+        }
+
+        function updateAdminUI() {
+            const adminBar = document.getElementById('admin-bar');
+            const lockIcon = document.getElementById('admin-lock-icon');
+            if (isAdmin) {
+                adminBar.classList.remove('hidden');
+                lockIcon.className = "fa-solid fa-lock-open text-amber-400 text-xs mb-0.5";
+            } else {
+                adminBar.classList.add('hidden');
+                lockIcon.className = "fa-solid fa-lock text-stone-400 text-xs mb-0.5";
+            }
+        }
+
+        function resetMenu() {
+            if (confirm("Восстановить исходное меню?")) {
+                products = [...defaultProducts];
+                localStorage.setItem('sushi_club_products_v5', JSON.stringify(products));
+                renderProducts();
+            }
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = products.map(p => `
+                <div class="product-card bg-[#181512] border border-stone-800/90 rounded-2xl overflow-hidden flex flex-col shadow-xl">
+                    <!-- Вертикальная рамка под фотографию/постер -->
+                    <div class="product-image-box">
+                        <img src="${p.image}" alt="${p.name}" loading="lazy">
+                    </div>
+
+                    <!-- Компактная область текста и кнопок -->
+                    <div class="p-3.5 flex flex-col flex-grow justify-between">
+                        <div>
+                            <h3 class="text-base font-bold text-white leading-snug mb-1">${p.name}</h3>
+                            <p class="text-xs text-stone-400 leading-tight line-clamp-2 mb-2">${p.desc}</p>
+                        </div>
+
+                        <div>
+                            <div class="text-base font-extrabold text-[#f59e0b] mb-2.5">${p.price} ₽</div>
+
+                            <button onclick="addToCart(${p.id})" class="w-full bg-[#f59e0b] hover:bg-amber-400 active:scale-[0.99] text-black font-bold py-2.5 rounded-xl text-xs sm:text-sm transition-all shadow-md shadow-amber-500/10">
+                                В корзину
+                            </button>
+
+                            ${isAdmin ? `
+                            <div class="grid grid-cols-2 gap-2 mt-2">
+                                <button onclick="openProductModal(${p.id})" class="bg-[#221e1b] hover:bg-stone-800 border border-stone-700/70 text-amber-400 py-1.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors">
+                                    <span>✏️</span> Изменить
+                                </button>
+                                <button onclick="deleteProduct(${p.id})" class="bg-[#291717] hover:bg-red-950/60 border border-red-900/40 text-stone-300 hover:text-red-300 py-1.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1.5 transition-colors">
+                                    <span>🗑️</span> Удалить
+                                </button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Корзина
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            const existing = cart.find(i => i.id === id);
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            saveCart();
+            updateCartBadge();
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.qty += delta;
+            if (item.qty <= 0) {
+                cart = cart.filter(i => i.id !== id);
+            }
+            saveCart();
+            updateCartBadge();
+            renderCart();
+        }
+
+        function saveCart() {
+            localStorage.setItem('sushi_club_cart_v5', JSON.stringify(cart));
+        }
+
+        function updateCartBadge() {
+            const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+            const badge = document.getElementById('cart-badge');
+            badge.textContent = totalQty;
+            if (totalQty > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function openCart() {
+            document.getElementById('checkout-fields').classList.add('hidden');
+            document.getElementById('btn-checkout-step').textContent = 'Оформить заказ';
+            renderCart();
+            document.getElementById('cart-modal').classList.remove('hidden');
+        }
+
+        function closeCart() {
+            document.getElementById('cart-modal').classList.add('hidden');
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="py-10 text-center text-stone-500 text-xs">Корзина пока пуста</div>`;
+                totalEl.textContent = '0 ₽';
+                return;
+            }
+
+            const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+            totalEl.textContent = `${total} ₽`;
+
+            container.innerHTML = cart.map(i => `
+                <div class="pt-3 first:pt-0 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <img src="${i.image}" class="w-12 h-12 rounded-xl object-cover bg-stone-900">
+                        <div>
+                            <div class="text-xs font-bold text-white">${i.name}</div>
+                            <div class="text-xs text-amber-400 font-semibold">${i.price * i.qty} ₽</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-[#0f0e0d] border border-stone-800 rounded-xl p-1">
+                        <button onclick="updateQty(${i.id}, -1)" class="w-6 h-6 rounded-lg bg-stone-800 text-white text-xs font-bold">-</button>
+                        <span class="w-5 text-center text-xs font-bold">${i.qty}</span>
+                        <button onclick="updateQty(${i.id}, 1)" class="w-6 h-6 rounded-lg bg-stone-800 text-white text-xs font-bold">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleCheckout() {
+            if (cart.length === 0) return;
+            const fields = document.getElementById('checkout-fields');
+            const btn = document.getElementById('btn-checkout-step');
+
+            if (fields.classList.contains('hidden')) {
+                fields.classList.remove('hidden');
+                btn.textContent = 'Подтвердить и скопировать заказ';
+                return;
+            }
+
+            const name = document.getElementById('cust-name').value.trim() || 'Клиент';
+            const phone = document.getElementById('cust-phone').value.trim() || 'Не указан';
+            const address = document.getElementById('cust-address').value.trim() || 'Самовывоз';
+            const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+            const orderLines = cart.map(i => `• ${i.name} x${i.qty} — ${i.price * i.qty} ₽`).join('\n');
+            const summary = `🍣 Новый заказ — СУШИ КЛУБ\n\n${orderLines}\n\n💰 Итого: ${total} ₽\n👤 Имя: ${name}\n📞 Контакт: ${phone}\n📍 Адрес: ${address}`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(summary).catch(() => {});
+            }
+
+            alert('Заказ скопирован! Сейчас откроется Telegram (@olegchjen) — просто вставьте сообщение и отправьте.\n\n' + summary);
+            window.open('https://t.me/olegchjen', '_blank');
+            cart = [];
+            saveCart();
+            updateCartBadge();
+            closeCart();
+        }
+
+        // Редактирование и добавление товаров
+        function openProductModal(id = null) {
+            const modal = document.getElementById('product-modal');
+            const title = document.getElementById('modal-title');
+            document.getElementById('product-form').reset();
+
+            if (id) {
+                const p = products.find(item => item.id === id);
+                if (!p) return;
+                title.textContent = 'Изменить ролл';
+                document.getElementById('edit-id').value = p.id;
+                document.getElementById('p-name').value = p.name;
+                document.getElementById('p-desc').value = p.desc;
+                document.getElementById('p-price').value = p.price;
+                document.getElementById('p-image').value = p.image;
+            } else {
+                title.textContent = 'Добавить новый ролл';
+                document.getElementById('edit-id').value = '';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('p-image').value = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function saveProduct(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('p-name').value.trim();
+            const desc = document.getElementById('p-desc').value.trim();
+            const price = Number(document.getElementById('p-price').value);
+            const image = document.getElementById('p-image').value.trim() || defaultProducts[0].image;
+
+            if (id) {
+                const idx = products.findIndex(p => p.id == id);
+                if (idx !== -1) {
+                    products[idx] = { id: Number(id), name, desc, price, image };
+                }
+            } else {
+                const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                products.push({ id: newId, name, desc, price, image });
+            }
+
+            localStorage.setItem('sushi_club_products_v5', JSON.stringify(products));
+            closeProductModal();
+            renderProducts();
+        }
+
+        function deleteProduct(id) {
+            if (confirm('Удалить эту позицию?')) {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('sushi_club_products_v5', JSON.stringify(products));
+                renderProducts();
+            }
+        }
+    </script>
+</body>
+</html>
